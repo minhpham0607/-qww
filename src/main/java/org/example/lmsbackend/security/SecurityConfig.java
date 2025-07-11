@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -23,16 +25,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/users/login", "/api/users/register").permitAll()
-                .requestMatchers("/api/courses/list").hasAnyRole("admin", "instructor")
-                .requestMatchers("/api/enrollments/**").hasAnyRole("admin", "instructor", "student")
-                .anyRequest().authenticated()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
+                .cors(withDefaults()) // ✅ Kích hoạt CORS với cấu hình mặc định (đã có corsConfigurationSource)
+                .csrf(csrf -> csrf.disable()) // ✅ disable CSRF đúng cách
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .requestMatchers("/api/courses/list").hasAnyRole("admin", "instructor")
+                        .requestMatchers("/api/enrollments/**").hasAnyRole("admin", "instructor", "student")
+                        .requestMatchers("/api/contents").hasAnyRole("admin", "instructor")
+                        .requestMatchers("/images/**").permitAll() // Cho phép truy cập ảnh
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
