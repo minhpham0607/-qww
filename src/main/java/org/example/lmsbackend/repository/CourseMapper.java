@@ -44,17 +44,18 @@ public interface CourseMapper {
 
 
     @Update("""
-        UPDATE courses
-        SET 
-            title = #{title},
-            description = #{description},
-            category_id = #{categoryId},
-            instructor_id = #{instructorId},
-            status = #{status},
-            price = #{price},
-            updated_at = CURRENT_TIMESTAMP
-        WHERE course_id = #{courseId}
-    """)
+    UPDATE courses
+    SET 
+        title = #{title},
+        description = #{description},
+        category_id = #{categoryId},
+        instructor_id = #{instructorId},
+        status = #{status},
+        price = #{price},
+        thumbnail_url = #{thumbnailUrl},
+        updated_at = CURRENT_TIMESTAMP
+    WHERE course_id = #{courseId}
+""")
     int updateCourse(Course course);
 
     @Delete("DELETE FROM courses WHERE course_id = #{courseId}")
