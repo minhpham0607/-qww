@@ -1,0 +1,42 @@
+# BÁO CÁO KIỂM THỬ PHẦN MỀM LMS
+
+## Phần 1: Lập kế hoạch và thiết kế kiểm thử
+
+### 1. Chức năng kiểm thử đã chọn
+- Quản lý khóa học (Course Management)
+- Học video (Video Learning)
+- Tham gia khóa học (Course Enrollment)
+
+### 1.1. Mục tiêu kiểm thử
+- Đảm bảo các chức năng trên hoạt động đúng theo yêu cầu nghiệp vụ.
+- Phát hiện lỗi chức năng, giao diện và luồng xử lý.
+- Đảm bảo tính ổn định khi tích hợp với các module khác.
+
+### 1.2. Loại kiểm thử áp dụng
+- Kiểm thử chức năng (Functional Testing): Đảm bảo các chức năng chính thực hiện đúng yêu cầu.
+- Kiểm thử tích hợp (Integration Testing): Đảm bảo các module phối hợp đúng khi tích hợp.
+- Kiểm thử hồi quy (Regression Testing): Đảm bảo các chức năng cũ không bị ảnh hưởng khi cập nhật mới.
+- Kiểm thử đơn vị (Unit Testing): Kiểm tra logic từng hàm/module nhỏ.
+
+**Lý do chọn:** Các loại kiểm thử này giúp phát hiện lỗi ở nhiều cấp độ, đảm bảo chất lượng tổng thể của hệ thống.
+
+### 1.3. Thiết kế ca kiểm thử (Test Case)
+
+| ID    | Tên ca kiểm thử                | Bước thực hiện                                                                                                    | Dữ liệu vào                        | Kết quả mong đợi                                      |
+|-------|-------------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------------------------|-------------------------------------------------------|
+| TC01  | Tạo khóa học hợp lệ           | 1. Đăng nhập admin; 2. Gửi POST /api/courses/create với CourseDTO hợp lệ và file ảnh                              | Thông tin hợp lệ, file ảnh          | Trả về 200, thông báo "Tạo khóa học thành công"      |
+| TC02  | Tạo khóa học thiếu trường bắt buộc | 1. Đăng nhập admin; 2. Gửi POST /api/courses/create thiếu title/description/categoryId...                        | CourseDTO thiếu trường              | Trả về 400, thông báo lỗi                              |
+| TC03  | Tạo khóa học với file ảnh lớn/sai định dạng | 1. Đăng nhập admin; 2. Gửi POST /api/courses/create với file ảnh lỗi                                              | File ảnh lỗi                        | Trả về 400, thông báo lỗi                              |
+| TC04  | Tạo khóa học với trạng thái không hợp lệ | 1. Đăng nhập admin; 2. Gửi POST /api/courses/create với status không thuộc [draft, published, archived]           | status không hợp lệ                  | Trả về 400, thông báo lỗi                              |
+| TC05  | Lấy danh sách khóa học (admin) | 1. Đăng nhập admin; 2. Gửi GET /api/courses/list                                                                  | -                                   | Trả về 200, danh sách khóa học                         |
+| TC06  | Lấy danh sách khóa học theo category | 1. Đăng nhập admin; 2. Gửi GET /api/courses/list?categoryId=...                                                   | categoryId                          | Trả về 200, chỉ các khóa học thuộc category            |
+| TC07  | Lấy danh sách khóa học theo status | 1. Đăng nhập admin; 2. Gửi GET /api/courses/list?status=published                                                 | status                              | Trả về 200, chỉ các khóa học published                 |
+| TC08  | Lấy danh sách khóa học (instructor) | 1. Đăng nhập instructor; 2. Gửi GET /api/courses/list                                                             | -                                   | Trả về 200, chỉ các khóa học của instructor            |
+| TC09  | Tạo khóa học với quyền user thường | 1. Đăng nhập user; 2. Gửi POST /api/courses/create                                                                | -                                   | Trả về 403, không có quyền                             |
+| TC10  | Tạo khóa học khi chưa đăng nhập | 1. Không đăng nhập; 2. Gửi POST /api/courses/create                                                               | -                                   | Trả về 401, yêu cầu đăng nhập                          |
+
+> (Có thể bổ sung thêm test case tùy thực tế)
+
+---
+
+*Báo cáo được lập bởi nhóm kiểm thử LMS, ngày 10/07/2025.*
