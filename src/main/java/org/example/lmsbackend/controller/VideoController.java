@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/videos")
 public class VideoController {
@@ -75,11 +75,19 @@ public class VideoController {
     @PreAuthorize("hasAnyRole('admin', 'instructor', 'student')")
     public ResponseEntity<Resource> streamVideo(@PathVariable Long videoId,
                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // Kiểm tra quyền xem video
-        if (userDetails.hasRole("instructor") && !videoService.isInstructorOfVideo(videoId, userDetails.getUserId())) {
+        System.out.println("🎥 Stream request: videoId=" + videoId + ", userId=" + userDetails.getUserId() + ", role=" + userDetails.getAuthorities());
+        
+        // Admin có quyền xem tất cả video
+        if (userDetails.hasRole("admin")) {
+            System.out.println("✅ Admin access granted for video " + videoId);
+        }
+        // Kiểm tra quyền xem video cho instructor và student
+        else if (userDetails.hasRole("instructor") && !videoService.isInstructorOfVideo(videoId, userDetails.getUserId())) {
+            System.out.println("❌ Instructor access denied for video " + videoId);
             return ResponseEntity.status(403).build();
         }
-        if (userDetails.hasRole("student") && !videoService.canStudentAccessVideo(videoId, userDetails.getUserId())) {
+        else if (userDetails.hasRole("student") && !videoService.canStudentAccessVideo(videoId, userDetails.getUserId())) {
+            System.out.println("❌ Student access denied for video " + videoId);
             return ResponseEntity.status(403).build();
         }
         
@@ -103,11 +111,15 @@ public class VideoController {
             return ResponseEntity.notFound().build();
         }
         
-        // Kiểm tra quyền xem video
-        if (userDetails.hasRole("instructor") && !videoService.isInstructorOfVideo(videoId, userDetails.getUserId())) {
+        // Admin có quyền xem tất cả video
+        if (userDetails.hasRole("admin")) {
+            System.out.println("✅ Admin access granted for video details " + videoId);
+        }
+        // Kiểm tra quyền xem video cho instructor và student
+        else if (userDetails.hasRole("instructor") && !videoService.isInstructorOfVideo(videoId, userDetails.getUserId())) {
             return ResponseEntity.status(403).build();
         }
-        if (userDetails.hasRole("student") && !videoService.canStudentAccessVideo(videoId, userDetails.getUserId())) {
+        else if (userDetails.hasRole("student") && !videoService.canStudentAccessVideo(videoId, userDetails.getUserId())) {
             return ResponseEntity.status(403).build();
         }
         

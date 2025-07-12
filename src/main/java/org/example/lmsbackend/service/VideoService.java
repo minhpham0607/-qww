@@ -91,7 +91,10 @@ public class VideoService {
     }
 
     public boolean isInstructorOfVideo(Long videoId, Integer instructorId) {
-        return videoMapper.isInstructorOfVideo(videoId, instructorId);
+        System.out.println("🔍 Checking instructor access: videoId=" + videoId + ", instructorId=" + instructorId);
+        boolean result = videoMapper.isInstructorOfVideo(videoId, instructorId);
+        System.out.println("🔍 Instructor access result: " + result);
+        return result;
     }
 
     public boolean canStudentAccessVideo(Long videoId, Integer userId) {
@@ -103,7 +106,15 @@ public class VideoService {
             Video video = videoMapper.findById(videoId);
             if (video == null) return null;
             
-            Path filePath = Paths.get("uploads/" + video.getFileUrl().replace("/videos/", ""));
+            System.out.println("🎬 Video from DB: id=" + video.getVideoId() + ", fileUrl=" + video.getFileUrl());
+            
+            if (video.getFileUrl() == null) {
+                System.out.println("❌ FileUrl is null for video: " + videoId);
+                return null;
+            }
+            
+            Path filePath = Paths.get("uploads" + video.getFileUrl());
+            System.out.println("🎯 Looking for file at: " + filePath.toAbsolutePath());
             return new UrlResource(filePath.toUri());
         } catch (Exception e) {
             e.printStackTrace();

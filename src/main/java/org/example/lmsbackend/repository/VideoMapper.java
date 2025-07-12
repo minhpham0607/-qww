@@ -34,6 +34,20 @@ public interface VideoMapper {
 
 
     @Select("SELECT * FROM videos WHERE video_id = #{videoId}")
+    @Results({
+            @Result(property = "videoId", column = "video_id"),
+            @Result(property = "title", column = "title"),
+            @Result(property = "description", column = "description"),
+            @Result(property = "fileUrl", column = "file_url"),
+            @Result(property = "duration", column = "duration"),
+            @Result(property = "fileSize", column = "file_size"),
+            @Result(property = "mimeType", column = "mime_type"),
+            @Result(property = "uploadedAt", column = "uploaded_at"),
+            @Result(property = "course", column = "course_id", 
+                    one = @One(select = "org.example.lmsbackend.repository.CourseMapper.findById")),
+            @Result(property = "instructor", column = "instructor_id", 
+                    one = @One(select = "org.example.lmsbackend.repository.UserMapper.findById"))
+    })
     Video findById(@Param("videoId") Long videoId);
 
     @Update("""
@@ -66,6 +80,20 @@ public interface VideoMapper {
         JOIN users u ON v.instructor_id = u.user_id
         WHERE v.course_id = #{courseId}
         """)
+    @Results({
+            @Result(property = "videoId", column = "video_id"),
+            @Result(property = "title", column = "title"),
+            @Result(property = "description", column = "description"),
+            @Result(property = "fileUrl", column = "file_url"),
+            @Result(property = "duration", column = "duration"),
+            @Result(property = "fileSize", column = "file_size"),
+            @Result(property = "mimeType", column = "mime_type"),
+            @Result(property = "uploadedAt", column = "uploaded_at"),
+            @Result(property = "course", column = "course_id", 
+                    one = @One(select = "org.example.lmsbackend.repository.CourseMapper.findById")),
+            @Result(property = "instructor", column = "instructor_id", 
+                    one = @One(select = "org.example.lmsbackend.repository.UserMapper.findById"))
+    })
     List<Video> findVideosByCourseId(@Param("courseId") Integer courseId);
 
 }
