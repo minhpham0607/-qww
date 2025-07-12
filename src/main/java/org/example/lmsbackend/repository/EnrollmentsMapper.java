@@ -8,6 +8,8 @@ import java.util.List;
 
 @Mapper
 public interface EnrollmentsMapper {
+    @Select("SELECT course_id FROM enrollments WHERE user_id = #{userId}")
+    List<Integer> getEnrolledCourseIdsByUserId(@Param("userId") int userId);
 
     @Select("SELECT COUNT(*) FROM enrollments WHERE user_id = #{userId} AND course_id = #{courseId}")
     int countEnrollment(@Param("userId") int userId, @Param("courseId") int courseId);

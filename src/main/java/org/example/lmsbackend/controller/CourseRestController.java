@@ -19,6 +19,34 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/courses")
 public class CourseRestController {
+    @Autowired
+    private org.example.lmsbackend.service.EnrollmentsService enrollmentsService;
+
+    // API mới: trả về tất cả khóa học kèm trạng thái đã đăng ký
+    @GetMapping("/all-with-status")
+    @PreAuthorize("hasRole('student') or hasRole('admin') or hasRole('instructor')")
+    public ResponseEntity<List<Map<String, Object>>> getAllCoursesWithStatus(@RequestParam int userId) {
+        List<Course> allCourses = courseService.getCourses(null, null, null);
+        // Lấy danh sách ID khóa học đã đăng ký
+        List<org.example.lmsbackend.dto.EnrollmentsDTO> enrolled = enrollmentsService.getEnrolledCourses(userId);
+        List<Integer> enrolledCourseIds = new java.util.ArrayList<>();
+        for (org.example.lmsbackend.dto.EnrollmentsDTO dto : enrolled) {
+            enrolledCourseIds.add(dto.getCourseId());
+        }
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Course course : allCourses) {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("courseId", course.getCourseId());
+            item.put("title", course.getTitle());
+            item.put("description", course.getDescription());
+            item.put("price", course.getPrice());
+            item.put("thumbnailUrl", course.getThumbnailUrl());
+            item.put("enrolled", enrolledCourseIds.contains(course.getCourseId()));
+            result.add(item);
+        }
+        return ResponseEntity.ok(result);
+    }
 
     @Autowired
     private CourseService courseService;

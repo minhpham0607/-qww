@@ -63,7 +63,9 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
     public boolean hasRole(String roleName) {
+        // Kiểm tra cả hai trường hợp: với và không có prefix ROLE_
         return authorities.stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + roleName));
+                .anyMatch(auth -> auth.getAuthority().equals(roleName) || 
+                                 auth.getAuthority().equals("ROLE_" + roleName));
     }
 }

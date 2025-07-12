@@ -25,16 +25,29 @@ public class EnrollmentsRestController {
 
     @PostMapping("/register")
     @PreAuthorize("hasAnyRole('instructor', 'student')")
-    public ResponseEntity<String> registerCourse(
+    public ResponseEntity<?> registerCourse(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EnrollmentRequest request
     ) {
+        System.out.println("🔍 Debug - User authorities: " + userDetails.getAuthorities());
+        System.out.println("🔍 Debug - hasRole('student'): " + userDetails.hasRole("student"));
+        
         int userId = userDetails.getUserId(); // ✅ lấy user từ token
         boolean success = enrollmentService.enrollUserInCourse(userId, request.getCourseId());
         if (success) {
-            return ResponseEntity.ok("Đăng ký thành công");
+            return ResponseEntity.ok(java.util.Map.of(
+                "success", true,
+                "message", "Đăng ký thành công",
+                "courseId", request.getCourseId(),
+                "userId", userId
+            ));
         } else {
-            return ResponseEntity.badRequest().body("Người dùng đã đăng ký khóa học này rồi");
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                "success", false,
+                "message", "Người dùng đã đăng ký khóa học này rồi",
+                "courseId", request.getCourseId(),
+                "userId", userId
+            ));
         }
     }
     @GetMapping("/my-courses")
@@ -46,6 +59,10 @@ public class EnrollmentsRestController {
         if (principal instanceof CustomUserDetails customUser) {
             userId = customUser.getUserId();
             System.out.println("🔍 User ID: " + userId);
+        }
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         List<EnrollmentsDTO> courses = enrollmentService.getEnrolledCourses(userId);

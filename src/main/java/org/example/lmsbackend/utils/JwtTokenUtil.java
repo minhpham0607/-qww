@@ -21,7 +21,7 @@ public class JwtTokenUtil {
 
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole());               // ✅ Không thêm "ROLE_"
+        claims.put("role", "ROLE_" + user.getRole());     // ✅ Thêm prefix "ROLE_"
         claims.put("userId", user.getUserId());           // ✅ Đảm bảo không null
         return createToken(claims, user.getUsername());
     }

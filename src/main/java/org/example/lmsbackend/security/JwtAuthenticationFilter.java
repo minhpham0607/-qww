@@ -28,8 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        System.out.println("🔍 JWT Filter - Auth header: " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("❌ JWT Filter - No valid auth header");
             filterChain.doFilter(request, response);
             return;
         }
@@ -38,11 +40,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = jwtTokenUtil.extractUsername(token);
         String role = jwtTokenUtil.extractRole(token);
         Integer userId = jwtTokenUtil.extractUserId(token);
+        
+        System.out.println("🔍 JWT Filter - Extracted username: " + username);
+        System.out.println("🔍 JWT Filter - Extracted role: " + role);
+        System.out.println("🔍 JWT Filter - Extracted userId: " + userId);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             List<SimpleGrantedAuthority> authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + role)
+                    new SimpleGrantedAuthority(role)  // ✅ Không thêm "ROLE_" vì đã có trong token
             );
+            
+            System.out.println("🔍 JWT Filter - Created authorities: " + authorities);
 
             CustomUserDetails customUserDetails = new CustomUserDetails(
                     userId,
@@ -56,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
+            System.out.println("✅ JWT Filter - Authentication set successfully");
         }
 
         filterChain.doFilter(request, response);

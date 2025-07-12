@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 @Service
 public class EnrollmentsService {
+    public List<Integer> getEnrolledCourseIds(int userId) {
+        return enrollmentMapper.getEnrolledCourseIdsByUserId(userId);
+    }
     @Autowired
     private EnrollmentsMapper enrollmentMapper;
 
