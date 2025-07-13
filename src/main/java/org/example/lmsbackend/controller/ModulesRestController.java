@@ -15,14 +15,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/modules")
 public class ModulesRestController {
-    @Autowired
-    private CourseService courseService;
-    @Autowired
-    private EnrollmentsService enrollmentsService;
+    private final CourseService courseService;
+    private final EnrollmentsService enrollmentsService;
+    private final ModulesService moduleService;
 
-    @Autowired
-    private ModulesService moduleService;
-
+    public ModulesRestController(CourseService courseService,
+                                 EnrollmentsService enrollmentsService,
+                                 ModulesService moduleService) {
+        this.courseService = courseService;
+        this.enrollmentsService = enrollmentsService;
+        this.moduleService = moduleService;
+    }
     @PostMapping("/{courseId}")
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public ResponseEntity<String> createModule(@PathVariable int courseId,

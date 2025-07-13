@@ -16,13 +16,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/discussions")
 public class DiscussionController {
-    @Autowired
-    private DiscussionService discussionService;
-    @Autowired
-    private CourseService courseService;
-    @Autowired
-    private EnrollmentsService enrollmentsService;
+    private final DiscussionService discussionService;
+    private final CourseService courseService;
+    private final EnrollmentsService enrollmentsService;
 
+    public DiscussionController(DiscussionService discussionService,
+                                CourseService courseService,
+                                EnrollmentsService enrollmentsService) {
+        this.discussionService = discussionService;
+        this.courseService = courseService;
+        this.enrollmentsService = enrollmentsService;
+    }
     @GetMapping
     @PreAuthorize("hasAnyRole('admin', 'instructor', 'student')")
     public List<DiscussionDTO> getAllDiscussions(@RequestParam Integer courseId, @AuthenticationPrincipal CustomUserDetails userDetails) {

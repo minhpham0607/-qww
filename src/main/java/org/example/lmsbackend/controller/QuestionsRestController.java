@@ -18,15 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/questions")
 public class QuestionsRestController {
 
-    @Autowired
-    private QuestionsService     questionsService;
+    private final QuestionsService questionsService;
+    private final CourseService courseService;
+    private final QuizzesService quizzesService;
 
-    @Autowired
-    private CourseService courseService;
-
-    @Autowired
-    private QuizzesService quizzesService;
-
+    public QuestionsRestController(QuestionsService questionsService,
+                                   CourseService courseService,
+                                   QuizzesService quizzesService) {
+        this.questionsService = questionsService;
+        this.courseService = courseService;
+        this.quizzesService = quizzesService;
+    }
     @PostMapping
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public ResponseEntity<String> createQuestion(@RequestBody QuestionsDTO dto,

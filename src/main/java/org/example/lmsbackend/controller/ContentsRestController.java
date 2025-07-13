@@ -17,17 +17,22 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/contents")
 public class ContentsRestController {
-    @Autowired
-    private EnrollmentsService enrollmentsService;
+    private final EnrollmentsService enrollmentsService;
+    private final ContentsService contentsService;
+    private final CourseService courseService;
+    private final ModulesService moduleService;
 
-    @Autowired
-    private ContentsService contentsService;
-
-    @Autowired
-    private CourseService courseService; // 👈 để kiểm tra instructor
-
-    @Autowired
-    private ModulesService moduleService; // 👈 để tra courseId từ moduleId
+    public ContentsRestController(
+            EnrollmentsService enrollmentsService,
+            ContentsService contentsService,
+            CourseService courseService,
+            ModulesService moduleService
+    ) {
+        this.enrollmentsService = enrollmentsService;
+        this.contentsService = contentsService;
+        this.courseService = courseService;
+        this.moduleService = moduleService;
+    }
     @PostMapping
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public ResponseEntity<String> createContent(@RequestBody ContentsDTO request,

@@ -22,13 +22,17 @@ import java.util.List;
 @RequestMapping("/api/videos")
 public class VideoController {
 
-    @Autowired
-    private VideoService videoService;
-    @Autowired
-    private CourseService courseService;
-    @Autowired
-    private EnrollmentsService enrollmentsService;
+    private final VideoService videoService;
+    private final CourseService courseService;
+    private final EnrollmentsService enrollmentsService;
 
+    public VideoController(VideoService videoService,
+                           CourseService courseService,
+                           EnrollmentsService enrollmentsService) {
+        this.videoService = videoService;
+        this.courseService = courseService;
+        this.enrollmentsService = enrollmentsService;
+    }
     // Lấy danh sách video theo khóa học - có phân quyền
     @GetMapping("/course/{courseId}")
     @PreAuthorize("hasAnyRole('admin', 'instructor', 'student')")

@@ -1,6 +1,7 @@
 package org.example.lmsbackend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -9,6 +10,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "discussions")
 public class Discussion {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "discussion_id", nullable = false)
@@ -22,7 +24,7 @@ public class Discussion {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
-    private org.example.lmsbackend.model.User user;
+    private User user;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -31,20 +33,16 @@ public class Discussion {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) createdAt = Instant.now();
-    }
 
     public Integer getId() {
         return discussionId;
     }
 
     public void setId(Integer id) {
-        this.discussionId = discussionId;
+        this.discussionId = id;
     }
 
     public Course getCourse() {
@@ -55,11 +53,11 @@ public class Discussion {
         this.course = course;
     }
 
-    public org.example.lmsbackend.model.User getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(org.example.lmsbackend.model.User user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
@@ -83,8 +81,12 @@ public class Discussion {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
+    @Override
+    public String toString() {
+        return "Discussion{" +
+                "discussionId=" + discussionId +
+                ", title='" + title + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
-
 }

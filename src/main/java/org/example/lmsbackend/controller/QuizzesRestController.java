@@ -19,16 +19,22 @@ import java.util.List;
 @RequestMapping("/api/quizzes")
 public class QuizzesRestController {
 
-    @Autowired
-    private QuizzesService quizzesService;
+    private final QuizzesService quizzesService;
+    private final ContentsService contentsService;
+    private final CourseService courseService;
+    private final EnrollmentsService enrollmentsService;
 
-    @Autowired
-    private ContentsService contentsService;
-
-    @Autowired
-    private CourseService courseService;
-    @Autowired
-    private EnrollmentsService enrollmentsService;
+    public QuizzesRestController(
+            QuizzesService quizzesService,
+            ContentsService contentsService,
+            CourseService courseService,
+            EnrollmentsService enrollmentsService
+    ) {
+        this.quizzesService = quizzesService;
+        this.contentsService = contentsService;
+        this.courseService = courseService;
+        this.enrollmentsService = enrollmentsService;
+    }
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public ResponseEntity<String> createQuiz(@RequestBody QuizzesDTO quizzesDTO,

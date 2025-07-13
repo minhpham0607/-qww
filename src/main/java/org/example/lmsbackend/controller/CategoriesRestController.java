@@ -14,8 +14,11 @@ import java.util.List;
 @RequestMapping("/api/categories")
 public class CategoriesRestController {
 
-    @Autowired
-    private CategoriesService categoriesService;
+    private final CategoriesService categoriesService;
+
+    public CategoriesRestController(CategoriesService categoriesService) {
+        this.categoriesService = categoriesService;
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('admin')")

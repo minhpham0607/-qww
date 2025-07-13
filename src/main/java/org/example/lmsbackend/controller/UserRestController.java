@@ -22,18 +22,22 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 public class UserRestController {
+        private final UserService userService;
+        private final UserMapper userMapper;
+        private final JwtTokenUtil jwtTokenUtil;
+        private final FileStorageService fileStorageService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Autowired
-    private FileStorageService fileStorageService;
-
+        public UserRestController(
+                UserService userService,
+                UserMapper userMapper,
+                JwtTokenUtil jwtTokenUtil,
+                FileStorageService fileStorageService
+        ) {
+            this.userService = userService;
+            this.userMapper = userMapper;
+            this.jwtTokenUtil = jwtTokenUtil;
+            this.fileStorageService = fileStorageService;
+        }
     // ✅ API đăng nhập
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
