@@ -4,7 +4,6 @@ import org.example.lmsbackend.dto.UserDTO;
 import org.example.lmsbackend.email.EmailService;
 import org.example.lmsbackend.model.User;
 import org.example.lmsbackend.repository.UserMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,14 +13,9 @@ import java.util.List;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private EmailService emailService;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userMapper = userMapper;
@@ -29,7 +23,6 @@ public class UserService {
         this.emailService = emailService;
     }
 
-    // ✅ Đăng nhập
     public boolean login(UserDTO userDTO) {
         User user = userMapper.findByUsername(userDTO.getUsername());
         if (user == null) return false;
@@ -41,7 +34,6 @@ public class UserService {
         return passwordEncoder.matches(userDTO.getPassword(), user.getPassword());
     }
 
-    // ✅ Đăng ký
     public boolean register(UserDTO userDTO) {
         if (userMapper.existsByUsername(userDTO.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
@@ -66,7 +58,7 @@ public class UserService {
                     throw new RuntimeException("CV is required for instructor registration.");
                 }
                 user.setCvUrl(userDTO.getCvUrl());
-                user.setVerified(false); // Instructor cần duyệt
+                user.setVerified(false);
             } else {
                 user.setVerified(userDTO.getIsVerified() != null ? userDTO.getIsVerified() : true);
             }
@@ -82,12 +74,10 @@ public class UserService {
         }
     }
 
-    // ✅ Lấy danh sách người dùng theo điều kiện
     public List<User> getUsers(Integer userId, String role, Boolean isVerified, String username) {
         return userMapper.findUsersByConditions(userId, role, isVerified, username);
     }
 
-    // ✅ Cập nhật người dùng
     public boolean updateUser(Long id, UserDTO userDTO) {
         User existingUser = userMapper.findById(id);
         if (existingUser == null) return false;
@@ -114,7 +104,6 @@ public class UserService {
         return userMapper.updateUser(existingUser) > 0;
     }
 
-    // ✅ Xóa người dùng
     public boolean deleteUser(int id) {
         return userMapper.deleteUserById(id) > 0;
     }

@@ -1,23 +1,27 @@
 package org.example.lmsbackend.service;
 
 import org.example.lmsbackend.dto.EnrollmentsDTO;
-import org.example.lmsbackend.repository.EnrollmentsMapper;
 import org.example.lmsbackend.dto.UserDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.lmsbackend.repository.EnrollmentsMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 @Service
 public class EnrollmentsService {
+
+    private final EnrollmentsMapper enrollmentMapper;
+
+    public EnrollmentsService(EnrollmentsMapper enrollmentMapper) {
+        this.enrollmentMapper = enrollmentMapper;
+    }
+
     public List<Integer> getEnrolledCourseIds(int userId) {
         return enrollmentMapper.getEnrolledCourseIdsByUserId(userId);
     }
-    @Autowired
-    private EnrollmentsMapper enrollmentMapper;
 
     public boolean enrollUserInCourse(int userId, int courseId) {
-        int count = enrollmentMapper.countEnrollment(userId, courseId);
-        if (count > 0) {
+        if (isStudentEnrolled(userId, courseId)) {
             return false;
         }
         enrollmentMapper.enrollCourse(userId, courseId);
@@ -35,6 +39,7 @@ public class EnrollmentsService {
     public List<UserDTO> getEnrolledUsersByCourse(int courseId) {
         return enrollmentMapper.getUsersByCourseId(courseId);
     }
+
     public boolean isStudentEnrolled(int userId, int courseId) {
         return enrollmentMapper.countEnrollment(userId, courseId) > 0;
     }

@@ -10,8 +10,10 @@ import java.util.List;
 @Service
 public class CategoriesService {
 
-    @Autowired
-    private CategoriesMapper categoriesMapper;
+    private final CategoriesMapper categoriesMapper;
+
+    public CategoriesService(CategoriesMapper categoriesMapper) {
+        this.categoriesMapper = categoriesMapper;}
 
     public void createCategory(Categories category) {
         categoriesMapper.insertCategory(category);

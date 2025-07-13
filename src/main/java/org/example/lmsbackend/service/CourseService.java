@@ -18,13 +18,18 @@ import java.util.Optional;
 
 @Service
 public class CourseService {
-    @Autowired
-    private ContentsService contentsService;
 
-    @Autowired
-    private QuizzesService quizzesService;
-    @Autowired
-    private CourseMapper courseMapper;
+    private final ContentsService contentsService;
+    private final QuizzesService quizzesService;
+    private final CourseMapper courseMapper;
+
+    public CourseService(ContentsService contentsService,
+                         QuizzesService quizzesService,
+                         CourseMapper courseMapper) {
+        this.contentsService = contentsService;
+        this.quizzesService = quizzesService;
+        this.courseMapper = courseMapper;
+    }
     public boolean createCourse(CourseDTO dto, MultipartFile imageFile) {
         try {
             Course course = new Course();

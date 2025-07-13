@@ -16,12 +16,18 @@ import java.util.stream.Collectors;
 
 @Service
 public class DiscussionService {
-    @Autowired
-    private DiscussionRepository discussionRepository;
-    @Autowired
-    private CourseRepository courseRepository;
-    @Autowired
-    private UserRepository userRepository;
+    private final DiscussionRepository discussionRepository;
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+
+    public DiscussionService(
+            DiscussionRepository discussionRepository,
+            CourseRepository courseRepository,
+            UserRepository userRepository) {
+        this.discussionRepository = discussionRepository;
+        this.courseRepository = courseRepository;
+        this.userRepository = userRepository;
+    }
 
     public List<DiscussionDTO> getAllDiscussions() {
         return discussionRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());

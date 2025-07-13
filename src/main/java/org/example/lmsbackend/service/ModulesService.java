@@ -10,9 +10,11 @@ import java.util.List;
 @Service
 public class ModulesService {
 
-    @Autowired
-    private ModulesMapper modulesMapper;
+    private final ModulesMapper modulesMapper;
 
+    public ModulesService(ModulesMapper modulesMapper) {
+        this.modulesMapper = modulesMapper;
+    }
     // Thêm module — dùng ContentsDTO thay vì ModuleRequest
     public void createModule(ModulesDTO module) {
         modulesMapper.insertModule(module);

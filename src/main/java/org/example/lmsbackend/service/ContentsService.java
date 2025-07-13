@@ -11,11 +11,13 @@ import java.util.List;
 @Service
 public class ContentsService {
 
-    @Autowired
-    private ContentsMapper contentsMapper;
+    private final ContentsMapper contentsMapper;
+    private final ModulesMapper modulesMapper;
 
-    @Autowired
-    private ModulesMapper modulesMapper;
+    public ContentsService(ContentsMapper contentsMapper, ModulesMapper modulesMapper) {
+        this.contentsMapper = contentsMapper;
+        this.modulesMapper = modulesMapper;
+    }
 
     public void createContent(ContentsDTO content) {
         contentsMapper.insertContent(content);

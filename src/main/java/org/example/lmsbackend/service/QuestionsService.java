@@ -12,11 +12,13 @@ import java.util.List;
 @Service
 public class QuestionsService {
 
-    @Autowired
-    private QuestionsMapper questionsMapper;
+    private final QuestionsMapper questionsMapper;
+    private final QuizzesMapper quizzesMapper;
 
-    @Autowired
-    private QuizzesMapper quizzesMapper;
+    public QuestionsService(QuestionsMapper questionsMapper, QuizzesMapper quizzesMapper) {
+        this.questionsMapper = questionsMapper;
+        this.quizzesMapper = quizzesMapper;
+    }
 
     // Tạo mới câu hỏi
     public boolean createQuestion(QuestionsDTO dto) {
