@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,35 +78,44 @@ public class UserRestController {
             if ("instructor".equalsIgnoreCase(role)) {
                 isVerified = false;
 
-                // ✅ Yêu cầu CV bắt buộc
                 if (cvFile == null || cvFile.isEmpty()) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("message", "CV file is required for instructors"));
                 }
 
-                // ✅ Lưu CV qua service
                 cvPath = fileStorageService.saveFile(cvFile, "cvs");
-
             } else {
-                // Các role khác mặc định được xác minh
                 isVerified = true;
             }
 
-            // ✅ Tạo DTO và gọi service
             UserDTO userDTO = new UserDTO(username, password, email, fullName, role, isVerified, cvPath);
             boolean created = userService.register(userDTO);
 
-            return created
-                    ? ResponseEntity.ok(Map.of("message", "User registered successfully", "cvUrl", cvPath))
-                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Registration failed"));
+            if (created) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "User registered successfully");
+                if (cvPath != null) response.put("cvUrl", cvPath);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Registration failed"));
+            }
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+            String message = e.getMessage();
+            if ("Username already exists".equals(message)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Tên đăng nhập đã tồn tại"));
+            } else if ("Email already exists".equals(message)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Email đã được sử dụng"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", message));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Internal server error"));
         }
     }
+
 
 
     // ✅ API lấy danh sách người dùng theo điều kiện
