@@ -1,8 +1,8 @@
 package org.example.lmsbackend.service;
 
-import org.example.lmsbackend.model.User;
 import org.example.lmsbackend.dto.UserDTO;
 import org.example.lmsbackend.email.EmailService;
+import org.example.lmsbackend.model.User;
 import org.example.lmsbackend.repository.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,34 +23,32 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
-    // ✅ Xử lý đăng nhập
-    public boolean login(UserDTO userDTO) {
-        System.out.println("Trying login with username: " + userDTO.getUsername());
-        System.out.println("Raw password: " + userDTO.getPassword());
-
-        User user = userMapper.findByUsername(userDTO.getUsername());
-
-        if (user == null) {
-            System.out.println("User not found");
-            return false;
-        }
-
-        System.out.println("Found user: " + user.getUsername());
-        System.out.println("Hashed password from DB: " + user.getPassword());
-
-        boolean match = passwordEncoder.matches(userDTO.getPassword(), user.getPassword());
-        System.out.println("Password match: " + match);
-
-        return match;
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, EmailService emailService) {
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
-    // ✅ Xử lý đăng ký
+    // ✅ Đăng nhập
+    public boolean login(UserDTO userDTO) {
+        User user = userMapper.findByUsername(userDTO.getUsername());
+        if (user == null) return false;
+
+        if (!user.isVerified()) {
+            throw new RuntimeException("Tài khoản chưa được xác minh");
+        }
+
+        return passwordEncoder.matches(userDTO.getPassword(), user.getPassword());
+    }
+
+    // ✅ Đăng ký
     public boolean register(UserDTO userDTO) {
         if (userMapper.existsByUsername(userDTO.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new IllegalArgumentException("Username already exists");
         }
+
         if (userMapper.existsByEmail(userDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
         User user = new User();
@@ -60,13 +58,22 @@ public class UserService {
         user.setFullName(userDTO.getFullName());
 
         try {
-            // ⚠️ CHỈ SỬA DÒNG NÀY THEO CÁCH 1: chuyển về lowercase
-            user.setRole(User.Role.valueOf(userDTO.getRole().toLowerCase()));
+            User.Role role = User.Role.valueOf(userDTO.getRole().toLowerCase());
+            user.setRole(role);
+
+            if (role == User.Role.instructor) {
+                if (userDTO.getCvUrl() == null || userDTO.getCvUrl().isBlank()) {
+                    throw new RuntimeException("CV is required for instructor registration.");
+                }
+                user.setCvUrl(userDTO.getCvUrl());
+                user.setVerified(false); // Instructor cần duyệt
+            } else {
+                user.setVerified(userDTO.getIsVerified() != null ? userDTO.getIsVerified() : true);
+            }
+
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid role: " + userDTO.getRole());
         }
-
-        user.setVerified(userDTO.getIsVerified() != null ? userDTO.getIsVerified() : false);
 
         try {
             return userMapper.insertUser(user) > 0;
@@ -75,17 +82,15 @@ public class UserService {
         }
     }
 
-    // ✅ Lấy danh sách người dùng có điều kiện
+    // ✅ Lấy danh sách người dùng theo điều kiện
     public List<User> getUsers(Integer userId, String role, Boolean isVerified, String username) {
         return userMapper.findUsersByConditions(userId, role, isVerified, username);
     }
 
-    // ✅ Cập nhật thông tin người dùng
+    // ✅ Cập nhật người dùng
     public boolean updateUser(Long id, UserDTO userDTO) {
         User existingUser = userMapper.findById(id);
-        if (existingUser == null) {
-            return false;
-        }
+        if (existingUser == null) return false;
 
         existingUser.setUserId(id.intValue());
         existingUser.setUsername(userDTO.getUsername());
@@ -93,7 +98,6 @@ public class UserService {
         existingUser.setFullName(userDTO.getFullName());
 
         try {
-            // ⚠️ CHỈ SỬA DÒNG NÀY THEO CÁCH 1
             existingUser.setRole(User.Role.valueOf(userDTO.getRole().toLowerCase()));
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid role: " + userDTO.getRole());

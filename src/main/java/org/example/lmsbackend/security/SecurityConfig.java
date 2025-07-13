@@ -25,16 +25,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults()) // ✅ Kích hoạt CORS với cấu hình mặc định (đã có corsConfigurationSource)
-                .csrf(csrf -> csrf.disable()) // ✅ disable CSRF đúng cách
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/login", "/api/users/register").permitAll()
                         .requestMatchers("/api/courses/list").hasAnyRole("admin", "instructor")
-                        .requestMatchers("/api/courses/all-with-status").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/api/enrollments/**").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/api/contents").hasAnyRole("admin", "instructor")
-                        .requestMatchers("/api/categories/**").hasAnyRole("admin", "instructor", "student")
-                        .requestMatchers("/images/**").permitAll() // Cho phép truy cập ảnh
+                        .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/cvs/**").permitAll() // ✅ Cho phép truy cập file CV công khai
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -48,44 +48,47 @@ public interface UserMapper {
 
     // ➕ Thêm người dùng mới
     @Insert("""
-    INSERT INTO users (username, password, email, full_name, role, is_verified, verified_at)
-    VALUES (#{username}, #{password}, #{email}, #{fullName}, #{role}, TRUE, NOW())
+    INSERT INTO users (username, password, email, full_name, role, is_verified, verified_at, cv_url)
+    VALUES (#{username}, #{password}, #{email}, #{fullName}, #{role}, #{isVerified}, 
+            CASE WHEN #{isVerified} = TRUE THEN NOW() ELSE NULL END,
+            #{cvUrl})
 """)
     @Options(useGeneratedKeys = true, keyProperty = "userId", keyColumn = "user_id")
     int insertUser(User user);
 
     // 📋 Lấy danh sách người dùng có điều kiện
     @Select("""
-        <script>
-            SELECT 
-                user_id AS userId,
-                username,
-                password,
-                email,
-                full_name AS fullName,
-                role,
-                verification_token AS verificationToken,
-                is_verified AS isVerified,
-                verified_at AS verifiedAt,
-                created_at AS createdAt,
-                updated_at AS updatedAt
-            FROM users
-            <where>
-                <if test="userId != null">
-                    AND user_id = #{userId}
-                </if>
-                <if test="role != null and role != ''">
-                    AND role = #{role}
-                </if>
-                <if test="isVerified != null">
-                    AND is_verified = #{isVerified}
-                </if>
-                <if test="username != null and username != ''">
-                    AND username LIKE CONCAT('%', #{username}, '%')
-                </if>
-            </where>
-        </script>
-    """)
+    <script>
+        SELECT 
+            user_id AS userId,
+            username,
+            password,
+            email,
+            full_name AS fullName,
+            role,
+            verification_token AS verificationToken,
+            is_verified AS isVerified,
+            verified_at AS verifiedAt,
+            created_at AS createdAt,
+            updated_at AS updatedAt,
+            cv_url AS cvUrl -- ✅ thêm dòng này
+        FROM users
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+            <if test="isVerified != null">
+                AND is_verified = #{isVerified}
+            </if>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+        </where>
+    </script>
+""")
     @Lang(XMLLanguageDriver.class)
     List<User> findUsersByConditions(@Param("userId") Integer userId,
                                      @Param("role") String role,
