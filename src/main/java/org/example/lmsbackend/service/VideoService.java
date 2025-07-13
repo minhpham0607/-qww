@@ -104,7 +104,10 @@ public class VideoService {
     public Resource getVideoResource(Long videoId) {
         try {
             Video video = videoMapper.findById(videoId);
-            if (video == null) return null;
+            if (video == null) {
+                System.out.println("❌ Video not found in DB: " + videoId);
+                return null;
+            }
             
             System.out.println("🎬 Video from DB: id=" + video.getVideoId() + ", fileUrl=" + video.getFileUrl());
             
@@ -113,10 +116,31 @@ public class VideoService {
                 return null;
             }
             
-            Path filePath = Paths.get("uploads" + video.getFileUrl());
+            // video.getFileUrl() = "/videos/filename.mp4"
+            // Extract just the filename from the fileUrl
+            String fileName = video.getFileUrl().substring(video.getFileUrl().lastIndexOf("/") + 1);
+            
+            // Construct correct path: uploads/videos/filename.mp4
+            Path filePath = Paths.get("uploads/videos/" + fileName);
             System.out.println("🎯 Looking for file at: " + filePath.toAbsolutePath());
-            return new UrlResource(filePath.toUri());
+            
+            if (!Files.exists(filePath)) {
+                System.out.println("❌ File does not exist at: " + filePath.toAbsolutePath());
+                return null;
+            }
+            
+            System.out.println("✅ File found, creating resource");
+            Resource resource = new UrlResource(filePath.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                System.out.println("✅ Resource is readable");
+                return resource;
+            } else {
+                System.out.println("❌ Resource exists but not readable");
+                return null;
+            }
         } catch (Exception e) {
+            System.out.println("❌ Exception in getVideoResource: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

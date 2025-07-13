@@ -15,9 +15,20 @@ import java.util.Arrays;
 public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Map cho thư mục uploads tổng quát
         String uploadPath = Paths.get("uploads").toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/images/**")
-                .addResourceLocations(uploadPath); // hoặc "file:/C:/path/to/uploads/"
+                .addResourceLocations(uploadPath);
+        
+        // Map riêng cho ảnh khóa học
+        String courseImagesPath = Paths.get("uploads", "imagescourse").toAbsolutePath().toUri().toString();
+        registry.addResourceHandler("/images/courses/**")
+                .addResourceLocations(courseImagesPath);
+        
+        // Map cho video
+        String videosPath = Paths.get("uploads", "videos").toAbsolutePath().toUri().toString();
+        registry.addResourceHandler("/videos/**")
+                .addResourceLocations(videosPath);
     }
 
     @Bean

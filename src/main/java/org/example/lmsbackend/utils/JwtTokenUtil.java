@@ -23,6 +23,7 @@ public class JwtTokenUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", "ROLE_" + user.getRole());     // ✅ Thêm prefix "ROLE_"
         claims.put("userId", user.getUserId());           // ✅ Đảm bảo không null
+        claims.put("fullName", user.getFullName());       // ✅ Thêm full name
         return createToken(claims, user.getUsername());
     }
 
@@ -46,6 +47,10 @@ public class JwtTokenUtil {
 
     public Integer extractUserId(String token) {
         return extractAllClaims(token).get("userId", Integer.class);
+    }
+
+    public String extractFullName(String token) {
+        return extractAllClaims(token).get("fullName", String.class);
     }
 
     public boolean isTokenExpired(String token) {

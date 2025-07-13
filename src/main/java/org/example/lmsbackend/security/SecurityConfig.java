@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/courses/all-with-status").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/api/enrollments/**").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/api/contents").hasAnyRole("admin", "instructor")
+                        .requestMatchers("/api/categories/**").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/images/**").permitAll() // Cho phép truy cập ảnh
                         .anyRequest().authenticated()
                 )

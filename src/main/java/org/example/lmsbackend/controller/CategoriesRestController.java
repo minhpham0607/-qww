@@ -25,10 +25,11 @@ public class CategoriesRestController {
     }
 
     @GetMapping("/list")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAnyRole('admin', 'instructor', 'student')")
     public ResponseEntity<List<Categories>> getCategories(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description) {
+        
         List<Categories> list = categoriesService.searchCategories(name, description);
         return new ResponseEntity<>(list, HttpStatus.OK);
     }

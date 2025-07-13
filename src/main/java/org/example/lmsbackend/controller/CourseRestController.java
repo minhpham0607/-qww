@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -118,11 +119,73 @@ public class CourseRestController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
     public ResponseEntity<?> deleteCourse(@PathVariable("id") Integer courseId) {
-        boolean deleted = courseService.deleteCourse(courseId);
-        if (deleted) {
-            return ResponseEntity.ok("Course deleted successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found");
+        try {
+            boolean deleted = courseService.deleteCourse(courseId);
+            if (deleted) {
+                return ResponseEntity.ok("Course deleted successfully");
+            } else {
+                // 🔸 Course tồn tại nhưng không thể xóa do có dữ liệu liên quan
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Cannot delete course. Please remove all related videos and enrollments first.");
+            }
+        } catch (Exception e) {
+            // 🔸 Lỗi không mong muốn khác
+            System.err.println("❌ Unexpected error in deleteCourse controller: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An unexpected error occurred while deleting the course.");
+        }
+    }
+
+    // Get course by ID - accessible to enrolled students, instructors, and admins
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('student') or hasRole('instructor') or hasRole('admin')")
+    public ResponseEntity<?> getCourseById(@PathVariable("id") Integer courseId) {
+        try {
+            Optional<Course> courseOpt = courseService.getCourseById(courseId);
+            
+            if (courseOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Khóa học không tồn tại"));
+            }
+            
+            Course course = courseOpt.get();
+            
+            // Check if user has access to this course
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof CustomUserDetails customUser) {
+                boolean isAdmin = customUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_admin"));
+                boolean isInstructor = customUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_instructor"));
+                boolean isStudent = customUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_student"));
+                
+                // Admin can access any course
+                if (isAdmin) {
+                    return ResponseEntity.ok(course);
+                }
+                
+                // Instructor can access their own courses
+                if (isInstructor && course.getInstructorId().equals(customUser.getId())) {
+                    return ResponseEntity.ok(course);
+                }
+                
+                // Student needs to be enrolled (we'll implement enrollment check later)
+                // For now, allow students to access any course
+                if (isStudent) {
+                    // TODO: Check if student is enrolled in this course
+                    return ResponseEntity.ok(course);
+                }
+            }
+            
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", "Bạn không có quyền truy cập khóa học này"));
+                
+        } catch (Exception e) {
+            System.err.println("❌ Error getting course: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Lỗi server khi lấy thông tin khóa học"));
         }
     }
 

@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class CourseService {
@@ -60,14 +61,14 @@ public class CourseService {
     public boolean updateCourse(Course course, MultipartFile imageFile) {
         try {
             if (imageFile != null && !imageFile.isEmpty()) {
-                // 👉 Lưu ảnh vào thư mục, ví dụ "uploads/"
+                // 👉 Lưu ảnh vào thư mục uploads/imagescourse/
                 String originalFilename = imageFile.getOriginalFilename();
                 String filename = UUID.randomUUID() + "_" + originalFilename;
-                Path filePath = Paths.get("uploads", filename);
+                Path filePath = Paths.get("uploads", "imagescourse", filename);
                 Files.createDirectories(filePath.getParent());
                 Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-                // 👉 Gán tên ảnh vào khóa học
+                // 👉 Gán tên ảnh vào khóa học (chỉ lưu tên file, không lưu đường dẫn đầy đủ)
                 course.setThumbnailUrl(filename);
             }
 
@@ -78,7 +79,17 @@ public class CourseService {
         }
     }
     public boolean deleteCourse(Integer courseId) {
-        return courseMapper.deleteCourse(courseId) > 0;
+        try {
+            return courseMapper.deleteCourse(courseId) > 0;
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // 🛑 Constraint violation - không log error, chỉ return false
+            System.out.println("ℹ️ Course " + courseId + " has related data, cannot delete - this is normal behavior");
+            return false;
+        } catch (Exception e) {
+            // 🛑 Các lỗi khác - vẫn log để debug
+            System.err.println("❌ Unexpected error deleting course " + courseId + ": " + e.getMessage());
+            return false;
+        }
     }
     public boolean isInstructorOwnerOfQuiz(Integer instructorId, Integer quizId) {
         Integer contentId = quizzesService.getContentIdByQuizId(quizId);
@@ -91,7 +102,7 @@ public class CourseService {
     }
     private String saveImage(MultipartFile file) {
         try {
-            String uploadDir = "uploads";
+            String uploadDir = "uploads/imagescourse";
             Path uploadPath = Paths.get(uploadDir);
 
             // Tạo thư mục nếu chưa tồn tại
@@ -115,4 +126,8 @@ public class CourseService {
         }
     }
 
+    // Get course by ID
+    public Optional<Course> getCourseById(Integer courseId) {
+        return courseMapper.findById(courseId);
+    }
 }
