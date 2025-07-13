@@ -4,7 +4,6 @@ import org.example.lmsbackend.model.Questions;
 import org.example.lmsbackend.dto.QuestionsDTO;
 import org.example.lmsbackend.repository.QuestionsMapper;
 import org.example.lmsbackend.repository.QuizzesMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

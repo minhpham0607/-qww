@@ -6,7 +6,6 @@ import org.example.lmsbackend.service.EnrollmentsService;
 import org.example.lmsbackend.dto.QuizzesDTO;
 import org.example.lmsbackend.service.QuizzesService;
 import org.example.lmsbackend.security.CustomUserDetails;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

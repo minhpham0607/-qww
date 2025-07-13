@@ -6,7 +6,6 @@ import org.example.lmsbackend.service.VideoService;
 import org.example.lmsbackend.service.CourseService;
 import org.example.lmsbackend.service.EnrollmentsService;
 import org.example.lmsbackend.security.CustomUserDetails;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

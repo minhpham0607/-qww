@@ -2,7 +2,6 @@ package org.example.lmsbackend.service;
 
 import org.example.lmsbackend.model.Categories;
 import org.example.lmsbackend.repository.CategoriesMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

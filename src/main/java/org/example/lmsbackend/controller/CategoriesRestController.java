@@ -2,7 +2,6 @@ package org.example.lmsbackend.controller;
 
 import org.example.lmsbackend.model.Categories;
 import org.example.lmsbackend.service.CategoriesService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

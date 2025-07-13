@@ -7,7 +7,6 @@ import org.example.lmsbackend.model.User;
 import org.example.lmsbackend.repository.CourseRepository;
 import org.example.lmsbackend.repository.DiscussionRepository;
 import org.example.lmsbackend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
