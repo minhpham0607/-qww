@@ -16,6 +16,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/contents")
 public class ContentsRestController {
+    private static final String ROLE_INSTRUCTOR = "instructor";
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_STUDENT = "student";
+
     private final EnrollmentsService enrollmentsService;
     private final ContentsService contentsService;
     private final CourseService courseService;
@@ -32,41 +36,45 @@ public class ContentsRestController {
         this.courseService = courseService;
         this.moduleService = moduleService;
     }
+
+    private ResponseEntity<String> checkInstructorOwnership(int userId, int moduleId, String action) {
+        int courseId = moduleService.getCourseIdByModuleId(moduleId);
+        if (!courseService.isInstructorOfCourse(userId, courseId)) {
+            return ResponseEntity.status(403).body("Bạn không có quyền " + action + " nội dung này");
+        }
+        return null;
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
     public ResponseEntity<String> createContent(@RequestBody ContentsDTO request,
                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
         int userId = userDetails.getUserId();
 
-        // Nếu là instructor → kiểm tra quyền với module
-        if (userDetails.hasRole("instructor")) {
-            int courseId = moduleService.getCourseIdByModuleId(request.getModuleId());
-            boolean isOwner = courseService.isInstructorOfCourse(userId, courseId);
-            if (!isOwner) {
-                return ResponseEntity.status(403).body("Bạn không có quyền tạo nội dung cho module này");
-            }
+        if (userDetails.hasRole(ROLE_INSTRUCTOR)) {
+            ResponseEntity<String> err = checkInstructorOwnership(userId, request.getModuleId(), "tạo");
+            if (err != null) return err;
         }
+
         contentsService.createContent(request);
         return ResponseEntity.ok("Content created successfully");
     }
 
     @GetMapping("/by-course/{courseId}")
     @PreAuthorize("hasAnyRole('admin', 'instructor', 'student')")
-    public ResponseEntity<?> getContentsByCourse(
+    public ResponseEntity<Object> getContentsByCourse(
             @PathVariable int courseId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         int userId = userDetails.getUserId();
 
-        // Nếu là instructor → phải dạy course đó
-        if (userDetails.hasRole("instructor")) {
+        if (userDetails.hasRole(ROLE_INSTRUCTOR)) {
             if (!courseService.isInstructorOfCourse(userId, courseId)) {
                 return ResponseEntity.status(403).body("Instructor không có quyền với khóa học này");
             }
         }
 
-        // Nếu là student → phải đã đăng ký khóa học
-        if (userDetails.hasRole("student")) {
+        if (userDetails.hasRole(ROLE_STUDENT)) {
             if (!enrollmentsService.isStudentEnrolled(userId, courseId)) {
                 return ResponseEntity.status(403).body("Bạn chưa đăng ký khóa học này");
             }
@@ -75,42 +83,37 @@ public class ContentsRestController {
         List<ContentsDTO> contents = contentsService.getContentsByCourseId(courseId);
         return ResponseEntity.ok(contents);
     }
+
     @PutMapping("/{contentId}")
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
-    public ResponseEntity<?> updateContent(
+    public ResponseEntity<String> updateContent(
             @PathVariable int contentId,
             @RequestBody ContentsDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // ✅ Kiểm tra quyền instructor có được sửa không (nếu cần)
-        if (userDetails.hasRole("instructor")) {
-            int courseId = moduleService.getCourseIdByModuleId(request.getModuleId());
-            if (!courseService.isInstructorOfCourse(userDetails.getUserId(), courseId)) {
-                return ResponseEntity.status(403).body("Bạn không có quyền sửa nội dung này");
-            }
+        if (userDetails.hasRole(ROLE_INSTRUCTOR)) {
+            ResponseEntity<String> err = checkInstructorOwnership(userDetails.getUserId(), request.getModuleId(), "sửa");
+            if (err != null) return err;
         }
 
-        request.setContentId(contentId); // gán ID từ path
+        request.setContentId(contentId);
         contentsService.updateContent(request);
         return ResponseEntity.ok("Cập nhật nội dung thành công");
     }
+
     @DeleteMapping("/{contentId}")
     @PreAuthorize("hasAnyRole('admin', 'instructor')")
-    public ResponseEntity<?> deleteContent(
+    public ResponseEntity<String> deleteContent(
             @PathVariable int contentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // (Optional) Kiểm tra quyền instructor có được xóa không
-        if (userDetails.hasRole("instructor")) {
-            // Lấy moduleId và courseId để kiểm tra quyền
+        if (userDetails.hasRole(ROLE_INSTRUCTOR)) {
             Integer moduleId = contentsService.getModuleIdByContentId(contentId);
             if (moduleId == null) {
                 return ResponseEntity.badRequest().body("Nội dung không tồn tại");
             }
-            int courseId = moduleService.getCourseIdByModuleId(moduleId);
-            if (!courseService.isInstructorOfCourse(userDetails.getUserId(), courseId)) {
-                return ResponseEntity.status(403).body("Bạn không có quyền xóa nội dung này");
-            }
+            ResponseEntity<String> err = checkInstructorOwnership(userDetails.getUserId(), moduleId, "xóa");
+            if (err != null) return err;
         }
 
         contentsService.deleteContent(contentId);

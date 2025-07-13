@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-
 @RestController
 @RequestMapping("/api/courses")
 public class CourseRestController {
+
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_INSTRUCTOR = "instructor";
+    private static final String ROLE_STUDENT = "student";
 
     private final CourseService courseService;
     private final EnrollmentsService enrollmentsService;
@@ -26,6 +29,24 @@ public class CourseRestController {
     public CourseRestController(CourseService courseService, EnrollmentsService enrollmentsService) {
         this.courseService = courseService;
         this.enrollmentsService = enrollmentsService;
+    }
+
+    private CustomUserDetails getCurrentUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            return (CustomUserDetails) principal;
+        }
+        return null;
+    }
+
+    private boolean canAccessCourse(CustomUserDetails user, Course course) {
+        if (user.hasRole(ROLE_ADMIN)) return true;
+        if (user.hasRole(ROLE_INSTRUCTOR) && course.getInstructorId().equals(user.getId())) return true;
+        if (user.hasRole(ROLE_STUDENT)) {
+            // TODO: kiểm tra user đã đăng ký khóa học hay chưa
+            return true;
+        }
+        return false;
     }
 
     @GetMapping("/all-with-status")
@@ -79,13 +100,11 @@ public class CourseRestController {
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String status
     ) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails currentUser = getCurrentUser();
         Integer instructorId = null;
 
-        if (principal instanceof CustomUserDetails customUser) {
-            if (customUser.hasRole("instructor")) {
-                instructorId = customUser.getId();
-            }
+        if (currentUser != null && currentUser.hasRole(ROLE_INSTRUCTOR)) {
+            instructorId = currentUser.getId();
         }
 
         List<Course> courses = courseService.getCourses(categoryId, instructorId, status);
@@ -137,19 +156,14 @@ public class CourseRestController {
             }
 
             Course course = courseOpt.get();
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            CustomUserDetails user = getCurrentUser();
 
-            if (principal instanceof CustomUserDetails customUser) {
-                if (customUser.hasRole("admin") ||
-                        (customUser.hasRole("instructor") && course.getInstructorId().equals(customUser.getId())) ||
-                        (customUser.hasRole("student"))) {
-                    return ResponseEntity.ok(course); // TODO: Add student enrollment check
-                }
+            if (user == null || !canAccessCourse(user, course)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "Bạn không có quyền truy cập khóa học này"));
             }
 
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "Bạn không có quyền truy cập khóa học này"));
-
+            return ResponseEntity.ok(course);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
