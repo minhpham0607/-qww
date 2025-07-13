@@ -11,6 +11,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Integer userId;
+    @Column(name = "cv_url", length = 255)
+    private String cvUrl;
+
+
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -127,5 +131,13 @@ public class User {
 
     public Timestamp getUpdatedAt() {
         return updatedAt;
+    }
+    // Getter & Setter
+    public String getCvUrl() {
+        return cvUrl;
+    }
+
+    public void setCvUrl(String cvUrl) {
+        this.cvUrl = cvUrl;
     }
 }

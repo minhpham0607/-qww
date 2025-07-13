@@ -8,8 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -22,6 +29,11 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, EmailService emailService) {
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
 
     // ✅ Xử lý đăng nhập
     public boolean login(UserDTO userDTO) {
@@ -35,14 +47,17 @@ public class UserService {
             return false;
         }
 
-        System.out.println("Found user: " + user.getUsername());
-        System.out.println("Hashed password from DB: " + user.getPassword());
+        if (!user.isVerified()) {
+            System.out.println("User not verified");
+            throw new RuntimeException("Tài khoản chưa được xác minh");
+        }
 
         boolean match = passwordEncoder.matches(userDTO.getPassword(), user.getPassword());
         System.out.println("Password match: " + match);
 
         return match;
     }
+
 
     // ✅ Xử lý đăng ký
     public boolean register(UserDTO userDTO) {
@@ -59,14 +74,28 @@ public class UserService {
         user.setEmail(userDTO.getEmail());
         user.setFullName(userDTO.getFullName());
 
+        // Xử lý role và kiểm tra CV nếu là instructor
+        String rawRole = userDTO.getRole().toLowerCase();
         try {
-            // ⚠️ CHỈ SỬA DÒNG NÀY THEO CÁCH 1: chuyển về lowercase
-            user.setRole(User.Role.valueOf(userDTO.getRole().toLowerCase()));
+            User.Role role = User.Role.valueOf(rawRole);
+            user.setRole(role);
+
+            // Nếu là instructor thì yêu cầu CV và đặt isVerified = false
+            if (role == User.Role.instructor) {
+                if (userDTO.getCvUrl() == null || userDTO.getCvUrl().isBlank()) {
+                    throw new RuntimeException("CV is required for instructor registration.");
+                }
+                user.setCvUrl(userDTO.getCvUrl());
+                user.setVerified(false); // ❗ Giảng viên phải chờ duyệt
+            } else {
+                // Các role khác dùng theo userDTO hoặc mặc định là true
+                Boolean verified = userDTO.getIsVerified() != null ? userDTO.getIsVerified() : true;
+                user.setVerified(verified);
+            }
+
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid role: " + userDTO.getRole());
         }
-
-        user.setVerified(userDTO.getIsVerified() != null ? userDTO.getIsVerified() : false);
 
         try {
             return userMapper.insertUser(user) > 0;
@@ -74,6 +103,7 @@ public class UserService {
             throw new RuntimeException("Username or Email already exists (DB constraint)");
         }
     }
+
 
     // ✅ Lấy danh sách người dùng có điều kiện
     public List<User> getUsers(Integer userId, String role, Boolean isVerified, String username) {
@@ -114,4 +144,27 @@ public class UserService {
     public boolean deleteUser(int id) {
         return userMapper.deleteUserById(id) > 0;
     }
-}
+    public class FileStorageService {
+
+        public String saveFile(MultipartFile file, String subFolder) {
+            try {
+                String uploadDir = "uploads/" + subFolder;
+                Path uploadPath = Paths.get(uploadDir);
+
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                String originalFilename = file.getOriginalFilename();
+                String cleanedFilename = originalFilename != null ? originalFilename.replaceAll("\\s+", "_") : "file";
+                String filename = UUID.randomUUID() + "_" + cleanedFilename;
+
+                Path filePath = uploadPath.resolve(filename);
+                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                return subFolder + "/" + filename; // Trả về đường dẫn tương đối
+            } catch (IOException e) {
+                throw new RuntimeException("Lỗi khi lưu file", e);
+            }
+        }
+    }}

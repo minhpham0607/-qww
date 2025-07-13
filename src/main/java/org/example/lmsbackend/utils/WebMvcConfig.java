@@ -19,7 +19,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         String uploadPath = Paths.get("uploads").toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(uploadPath);
-        
+        registry.addResourceHandler("/cvs/**")
+                .addResourceLocations(uploadPath + "cvs/");
         // Map riêng cho ảnh khóa học
         String courseImagesPath = Paths.get("uploads", "imagescourse").toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/images/courses/**")
@@ -29,6 +30,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         String videosPath = Paths.get("uploads", "videos").toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/videos/**")
                 .addResourceLocations(videosPath);
+
     }
 
     @Bean
